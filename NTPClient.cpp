@@ -149,6 +149,34 @@ int NTPClient::getMinutes() {
 int NTPClient::getSeconds() {
   return (this->getEpochTime() % 60);
 }
+void NTPClient::getDate( uint16_t *year, uint8_t *month, uint8_t *day, unsigned long secs ) {
+  unsigned long rawTime = (secs ? secs : this->getEpochTime()) / 86400L;  // in days
+  unsigned long days = 0, yearInt = 1970;
+  uint8_t monthInt;
+  static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};
+
+  while((days += (LEAP_YEAR(yearInt) ? 366 : 365)) <= rawTime)
+    yearInt++;
+  rawTime -= days - (LEAP_YEAR(yearInt) ? 366 : 365); // now it is days in this yearInt, starting at 0
+  days=0;
+  for (monthInt=0; monthInt<12; monthInt++) {
+    uint8_t monthLength;
+    if (monthInt==1) { // february
+      monthLength = LEAP_YEAR(yearInt) ? 29 : 28;
+    } else {
+      monthLength = monthDays[monthInt];
+    }
+    if (rawTime < monthLength) break;
+    rawTime -= monthLength;
+  }
+
+  if( year )
+	*year = static_cast< uint16_t >( yearInt );
+  if( month )
+	*month = static_cast< uint8_t >( monthInt + 1 );
+  if( day )	
+	*day = static_cast< uint8_t >( rawTime + 1 );
+}
 
 String NTPClient::getFormattedTime(unsigned long secs) {
   unsigned long rawTime = secs ? secs : this->getEpochTime();

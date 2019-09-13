@@ -66,7 +66,7 @@ class NTPClient {
     int getMinutes();
     int getSeconds();
 
-    /**
+	/**
      * Changes the time offset. Useful for changing timezones dynamically
      */
     void setTimeOffset(int timeOffset);
@@ -93,6 +93,7 @@ class NTPClient {
     */
     String getFormattedDate(unsigned long secs = 0);
 
+	void getDate( uint16_t *year, uint8_t *month, uint8_t *day, unsigned long secs = 0 );
     /**
      * Stops the underlying UDP client
      */
