@@ -32,7 +32,8 @@ NTPClient::NTPClient( UDP &udp, const char *poolServerName, int timeOffset, unsi
 	m_timeOffset( timeOffset ),
 	m_updateInterval( updateInterval ),
 	m_currentEpoc(0 ),
-	m_lastUpdate( 0 )
+	m_lastUpdate( 0 ),
+	m_ready( false )
 {
 }
 
@@ -85,7 +86,7 @@ bool NTPClient::forceUpdate()
 	int cb = 0;
 	do 
 	{
-		delay ( 10 );
+		delay( 10 );
 		cb = m_udp->parsePacket();
 
 		if( cb > 0 )
@@ -109,6 +110,7 @@ bool NTPClient::forceUpdate()
 	// this is NTP time (seconds since Jan 1 1900):
 	unsigned long secsSince1900 = highWord << 16 | lowWord;
 	m_currentEpoc = secsSince1900 - SEVENZYYEARS;
+	m_ready = true;
 
 	return true;
 }

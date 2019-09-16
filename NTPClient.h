@@ -19,6 +19,7 @@ class NTPClient
 		unsigned long m_updateInterval;		// In ms
 		unsigned long m_currentEpoc;	// In s
 		unsigned long m_lastUpdate;		// In ms
+		bool m_ready;
 		byte m_packetBuffer[ NTP_PACKET_SIZE ];
 
 		void sendNTPPacket();
@@ -36,7 +37,7 @@ class NTPClient
 		 * Stops the underlying UDP client
 		 */
 		void end();
-		
+
 		/**
 		 * This should be called in the main loop of your application. By default an update from the NTP Server is only
 		 * made every 60 seconds. This can be configured in the NTPClient constructor.
@@ -51,6 +52,8 @@ class NTPClient
 		 * @return true on success, false on failure
 		 */
 		bool forceUpdate();
+
+		inline bool isReady() const;
 
 		uint16_t year();
 		uint8_t month();
@@ -94,5 +97,11 @@ class NTPClient
 		*/
 		void setEpochTime( unsigned long secs );
 };
+
+//	----- inline functions -----
+bool NTPClient::isReady() const {
+	return m_ready;
+}
+
 
 #endif
