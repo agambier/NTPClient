@@ -1,109 +1,98 @@
-#pragma once
+#ifndef __NTPClient_H__
+#define __NTPClient_H__
 
 #include "Arduino.h"
-
 #include <Udp.h>
 
-#define SEVENZYYEARS 2208988800UL
-#define NTP_PACKET_SIZE 48
-#define NTP_DEFAULT_LOCAL_PORT 1337
-#define LEAP_YEAR(Y)     ( (Y>0) && !(Y%4) && ( (Y%100) || !(Y%400) ) )
+#define NTP_SERVER				"pool.ntp.org"
+#define NTP_PACKET_SIZE			48
+#define NTP_DEFAULT_LOCAL_PORT	1337
 
+class NTPClient 
+{
+	private:
+		UDP* m_udp;
+		bool m_udpSetup = false;
+		const char* m_poolServerName;
+		int m_port = NTP_DEFAULT_LOCAL_PORT;
+		int m_timeOffset;
+		unsigned long m_updateInterval;		// In ms
+		unsigned long m_currentEpoc;	// In s
+		unsigned long m_lastUpdate;		// In ms
+		byte m_packetBuffer[ NTP_PACKET_SIZE ];
 
-class NTPClient {
-  private:
-    UDP*          _udp;
-    bool          _udpSetup       = false;
-
-    const char*   _poolServerName = "pool.ntp.org"; // Default time server
-    int           _port           = NTP_DEFAULT_LOCAL_PORT;
-    int           _timeOffset     = 0;
-
-    unsigned long _updateInterval = 60000;  // In ms
-
-    unsigned long _currentEpoc    = 0;      // In s
-    unsigned long _lastUpdate     = 0;      // In ms
-
-    byte          _packetBuffer[NTP_PACKET_SIZE];
-
-    void          sendNTPPacket();
-    bool          isValid(byte * ntpPacket);
+		void sendNTPPacket();
+		bool isValid( byte * ntpPacket );
 
   public:
-    NTPClient(UDP& udp);
-    NTPClient(UDP& udp, int timeOffset);
-    NTPClient(UDP& udp, const char* poolServerName);
-    NTPClient(UDP& udp, const char* poolServerName, int timeOffset);
-    NTPClient(UDP& udp, const char* poolServerName, int timeOffset, unsigned long updateInterval);
+		NTPClient( UDP &udp, const char *poolServerName = NTP_SERVER, int timeOffset = 0, unsigned long updateInterval = 60000 );
 
-    /**
-     * Starts the underlying UDP client with the default local port
-     */
-    void begin();
+		/**
+		 * Starts the underlying UDP client with the specified local port
+		 */
+		void begin( int port = NTP_DEFAULT_LOCAL_PORT );
 
-    /**
-     * Starts the underlying UDP client with the specified local port
-     */
-    void begin(int port);
+		/**
+		 * Stops the underlying UDP client
+		 */
+		void end();
+		
+		/**
+		 * This should be called in the main loop of your application. By default an update from the NTP Server is only
+		 * made every 60 seconds. This can be configured in the NTPClient constructor.
+		 *
+		 * @return true on success, false on failure
+		 */
+		bool update();
 
-    /**
-     * This should be called in the main loop of your application. By default an update from the NTP Server is only
-     * made every 60 seconds. This can be configured in the NTPClient constructor.
-     *
-     * @return true on success, false on failure
-     */
-    bool update();
+		/**
+		 * This will force the update from the NTP Server.
+		 *
+		 * @return true on success, false on failure
+		 */
+		bool forceUpdate();
 
-    /**
-     * This will force the update from the NTP Server.
-     *
-     * @return true on success, false on failure
-     */
-    bool forceUpdate();
+		uint16_t year();
+		uint8_t month();
+		uint8_t day();
+		int hours();
+		int minutes();
+		int seconds();
 
-    int getDay();
-    int getHours();
-    int getMinutes();
-    int getSeconds();
-	uint16_t year();
-	uint8_t month();
-	uint8_t day();
+		/**
+		 * Changes the time offset. Useful for changing timezones dynamically
+		 */
+		void setTimeOffset( int timeOffset );
 
-	/**
-     * Changes the time offset. Useful for changing timezones dynamically
-     */
-    void setTimeOffset(int timeOffset);
+		/**
+		 * Set the update interval to another frequency. E.g. useful when the
+		 * timeOffset should not be set in the constructor
+		 */
+		void setUpdateInterval( unsigned long updateInterval );
 
-    /**
-     * Set the update interval to another frequency. E.g. useful when the
-     * timeOffset should not be set in the constructor
-     */
-    void setUpdateInterval(unsigned long updateInterval);
+		/**
+		* @return secs argument (or 0 for current time) formatted like `hh:mm:ss`
+		*/
+		String formattedTime( unsigned long secs = 0 );
 
-    /**
-    * @return secs argument (or 0 for current time) formatted like `hh:mm:ss`
-    */
-    String getFormattedTime(unsigned long secs = 0);
+		/**
+		 * @return time in seconds since Jan. 1, 1970
+		 */
+		unsigned long epochTime();
 
-    /**
-     * @return time in seconds since Jan. 1, 1970
-     */
-    unsigned long getEpochTime();
-  
-    /**
-    * @return secs argument (or 0 for current date) formatted to ISO 8601
-    * like `2004-02-12T15:19:21+00:00`
-    */
-    String getFormattedDate(unsigned long secs = 0);
+		/**
+		* @return secs argument (or 0 for current date) formatted to ISO 8601
+		* like `2004-02-12T15:19:21+00:00`
+		*/
+		String formattedDate( unsigned long secs = 0 );
 
-	void getDate( uint16_t *year, uint8_t *month, uint8_t *day, unsigned long secs = 0 );
-    /**
-     * Stops the underlying UDP client
-     */
-    void end();
+		void date( uint16_t *year, uint8_t *month, uint8_t *day, unsigned long secs = 0 );
 
-    /**
-    * Replace the NTP-fetched time with seconds since Jan. 1, 1970
-    */
-    void setEpochTime(unsigned long secs);
+
+		/**
+		* Replace the NTP-fetched time with seconds since Jan. 1, 1970
+		*/
+		void setEpochTime( unsigned long secs );
 };
+
+#endif
