@@ -149,6 +149,21 @@ int NTPClient::getMinutes() {
 int NTPClient::getSeconds() {
   return (this->getEpochTime() % 60);
 }
+uint16_t NTPClient::year() {
+	uint16_t result;
+	getDate( &result, nullptr, nullptr );
+	return result;
+}
+uint8_t NTPClient::month() {
+	uint8_t result;
+	getDate( nullptr, &result, nullptr );
+	return result;
+}
+uint8_t NTPClient::day() {
+	uint8_t result;
+	getDate( nullptr, nullptr, &result );
+	return result;
+}
 void NTPClient::getDate( uint16_t *year, uint8_t *month, uint8_t *day, unsigned long secs ) {
   unsigned long rawTime = (secs ? secs : this->getEpochTime()) / 86400L;  // in days
   unsigned long days = 0, yearInt = 1970;
